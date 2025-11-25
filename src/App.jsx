@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaEdit, FaTrash, FaTimes, FaCheck } from "react-icons/fa";
-
+import "./App.css";
 
 export default function App() {
   const [tasks, setTasks] = useState([]);
@@ -11,26 +11,28 @@ export default function App() {
   const API = "https://api.restful-api.dev/objects";
   const OWNER = "mytodolistapp";
 
-  // โหลด Tasks จาก API
+  // Load Tasks from API
   useEffect(() => {
     fetch(API)
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         const taskList = data
-          .filter(obj => obj.data?.type === "tasks" && obj.data?.owner === OWNER)
-          .map(obj => ({
+          .filter(
+            (obj) => obj.data?.type === "tasks" && obj.data?.owner === OWNER
+          )
+          .map((obj) => ({
             id: obj.id,
             name: obj.name,
-            completed: obj.data?.completed ?? false
+            completed: obj.data?.completed ?? false,
           }));
         setTasks(taskList);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error fetching objects:", err);
       });
   }, []);
 
-  // เพิ่ม task
+  // Add Task
   const addTask = async () => {
     if (!newTask.trim()) return;
 
@@ -39,14 +41,14 @@ export default function App() {
       data: {
         completed: false,
         type: "tasks",
-        owner: OWNER
-      }
+        owner: OWNER,
+      },
     };
 
     const res = await fetch(API, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
 
     const newObj = await res.json();
@@ -54,7 +56,7 @@ export default function App() {
     const newTaskObj = {
       id: newObj.id,
       name: newObj.name,
-      completed: newObj.data?.completed ?? false
+      completed: newObj.data?.completed ?? false,
     };
 
     setTasks([...tasks, newTaskObj]);
@@ -68,87 +70,92 @@ export default function App() {
       data: {
         completed: !task.completed,
         type: "tasks",
-        owner: OWNER
-      }
+        owner: OWNER,
+      },
     };
 
     const res = await fetch(`${API}/${task.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedBody)
+      body: JSON.stringify(updatedBody),
     });
 
     const updatedObj = await res.json();
 
-    setTasks(tasks.map(t =>
-      t.id === task.id
-        ? {
-            id: updatedObj.id,
-            name: updatedObj.name,
-            completed: updatedObj.data?.completed ?? false
-          }
-        : t
-    ));
+    setTasks(
+      tasks.map((t) =>
+        t.id === task.id
+          ? {
+              id: updatedObj.id,
+              name: updatedObj.name,
+              completed: updatedObj.data?.completed ?? false,
+            }
+          : t
+      )
+    );
   };
 
-  // เริ่มแก้ไข
+  // Start Editing
   const startEdit = (task) => {
     setEditingId(task.id);
     setEditingText(task.name);
   };
 
-  // บันทึกแก้ไข
+  // Save Edit
   const saveEdit = async (task) => {
     const updatedBody = {
       name: editingText,
       data: {
         completed: task.completed,
         type: "tasks",
-        owner: OWNER
-      }
+        owner: OWNER,
+      },
     };
 
     const res = await fetch(`${API}/${task.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updatedBody)
+      body: JSON.stringify(updatedBody),
     });
 
     const updatedObj = await res.json();
 
-    setTasks(tasks.map(t =>
-      t.id === task.id
-        ? {
-            id: updatedObj.id,
-            name: updatedObj.name,
-            completed: updatedObj.data?.completed ?? false
-          }
-        : t
-    ));
+    setTasks(
+      tasks.map((t) =>
+        t.id === task.id
+          ? {
+              id: updatedObj.id,
+              name: updatedObj.name,
+              completed: updatedObj.data?.completed ?? false,
+            }
+          : t
+      )
+    );
 
     setEditingId(null);
     setEditingText("");
   };
 
-  // ลบ task
+  // Delete Task
   const deleteTask = async (id) => {
     await fetch(`${API}/${id}`, { method: "DELETE" });
-    setTasks(tasks.filter(t => t.id !== id));
+    setTasks(tasks.filter((t) => t.id !== id));
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>To Do List</h1>
+    <div>
+      <h1 className="title">To Do List</h1>
 
-      <input
-        value={newTask}
-        onChange={e => setNewTask(e.target.value)}
-        placeholder="Enter new task..."
-      />
-      <button onClick={addTask}>Add</button>
-
+      <div className="input-row">
+        <input
+          value={newTask}
+          onChange={(e) => setNewTask(e.target.value)}
+          placeholder="Enter new task..."
+        />
+        <button onClick={addTask}>Add</button>
+      </div>
       <ul>
-        {tasks.map(task => (
+        {tasks.map((task) => (
           <li key={task.id}>
             <input
               type="checkbox"
@@ -159,20 +166,51 @@ export default function App() {
             {editingId === task.id ? (
               <>
                 <input
+                  className="edit-input"
                   value={editingText}
                   onChange={(e) => setEditingText(e.target.value)}
                 />
-                <button onClick={() => saveEdit(task)}><FaCheck /></button>
-                <button onClick={() => setEditingId(null)}><FaTimes /></button>
+
+                <button
+                  className="icon-btn icon-check"
+                  onClick={() => saveEdit(task)}
+                >
+                  <FaCheck />
+                </button>
+
+                <button
+                  className="icon-btn icon-cancel"
+                  onClick={() => {
+                    setEditingId(null);
+                    setEditingText("");
+                  }}
+                >
+                  <FaTimes />
+                </button>
               </>
             ) : (
               <>
-                {task.name}
-                <button onClick={() => startEdit(task)}><FaEdit /></button>
+                <span
+                  className={`task-name ${task.completed ? "completed" : ""}`}
+                >
+                  {task.name}
+                </span>
+
+                <button
+                  className="icon-btn icon-edit"
+                  onClick={() => startEdit(task)}
+                >
+                  <FaEdit />
+                </button>
               </>
             )}
 
-            <button onClick={() => deleteTask(task.id)}><FaTrash /></button>
+            <button
+              className="icon-btn icon-delete"
+              onClick={() => deleteTask(task.id)}
+            >
+              <FaTrash />
+            </button>
           </li>
         ))}
       </ul>
